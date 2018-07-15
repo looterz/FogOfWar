@@ -39,11 +39,11 @@ public:
 
 	//How far will an actor be able to see
 	//CONSIDER: Place it on the actors to allow for individual sight-radius
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FogOfWar)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SightRange = 9.0f;
 
 	//The number of samples per 100 unreal units
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FogOfWar)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SamplesPerMeter = 2.0f;
 
 	//If the last texture blending is done
@@ -82,6 +82,12 @@ public:
 	//Blur kernel
 	UPROPERTY()
 	TArray<float> blurKernel;
+	/* Color of unexplored areas. Fog transparancy is set with the alpha channel */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FColor FogColor;
+	/* Color of areas that are explored, but that are currently unseen. Only used if blurring is disabled */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 ShroudOpacity;
 
 protected:
 	UPROPERTY()
@@ -89,16 +95,17 @@ protected:
 	FCriticalSection FowComponents_mutex;
 public:
 	/* register a component for FOW-texture calculations */
-	UFUNCTION(BlueprintCallable, Category = "FOW")
+	UFUNCTION(BlueprintCallable)
 	void RegisterComponent(UFogOfWarComponent *Comp);
 	/* de register a component for FOW-texture calculations */
-	UFUNCTION(BlueprintCallable, Category = "FOW")
+	UFUNCTION(BlueprintCallable)
 	void DeRegisterComponent(UFogOfWarComponent *Comp);
 	/* Get an array with the currently registerd components */
-	UFUNCTION(BlueprintCallable, Category = "FOW")
+	UFUNCTION(BlueprintCallable)
 	void GetFowComponents(TArray<UFogOfWarComponent *> &OutFowComponents);
 
 	//DEBUG: Time it took to update the fow texture
+	UPROPERTY(VisibleAnywhere)
 	float fowUpdateTime = 0;
 
 	//Getter for the working thread
@@ -107,13 +114,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	UPostProcessComponent *PostProcessComponent;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FOW")
+	UPROPERTY(BlueprintReadWrite)
 	UMaterialInstanceDynamic *FOWMaterial;
 
 protected:
 	void UpdateFowTexture();
 
-	UPROPERTY(BlueprintReadWrite, Category = "FOW")
+	UPROPERTY(BlueprintReadWrite)
 	float FOWTextureBlend;
 
 	//Triggers the start of a new FOW-texture-update

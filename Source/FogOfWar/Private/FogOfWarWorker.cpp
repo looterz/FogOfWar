@@ -37,7 +37,10 @@ uint32 AFogOfWarWorker::Run() {
 			float time = Manager->GetWorld()->TimeSeconds;
 			if (!Manager->bHasFOWTextureUpdate) {
 				UpdateFowTexture();
-				Manager->fowUpdateTime = Manager->GetWorld()->TimeSince(time);
+				if (Manager->GetWorld())
+				{
+					Manager->fowUpdateTime = Manager->GetWorld()->TimeSince(time);
+				}
 			}
 		}
 		FPlatformProcess::Sleep(0.1f);
@@ -152,19 +155,25 @@ void AFogOfWarWorker::UpdateFowTexture() {
 					sum += (Manager->blurKernel[i] * Manager->HorizontalBlurData[x + (y + shiftedIndex) * signedSize]);
 				}
 			}
-			Manager->TextureData[x + y * signedSize] = FColor((uint8)sum, (uint8)sum, (uint8)sum, 255);
+			uint8 Alpha = FMath::Clamp(255 - (uint8) (sum + 0.5), 0, 255);
+			FColor BlurColor = Manager->FogColor;
+			BlurColor.A = FMath::Min(BlurColor.A, Alpha);
+			Manager->TextureData[x + y * signedSize] = BlurColor;
 		}
 	}
 	else {
+		FColor ShroudColor = Manager->FogColor;
+		ShroudColor.A = Manager->ShroudOpacity;
 		for (int y = 0; y < signedSize; y++) {
 			for (int x = 0; x < signedSize; x++) {
 
 				if (Manager->UnfoggedData[x + (y * signedSize)]) {
 					if (currentlyInSight.Contains(FVector2D(x, y))) {
-						Manager->TextureData[x + y * signedSize] = FColor((uint8)255, (uint8)255, (uint8)255, 255);
+						Manager->TextureData[x + y * signedSize] = FColor(255, 255, 255, 0);
 					}
 					else {
-						Manager->TextureData[x + y * signedSize] = FColor((uint8)100, (uint8)100, (uint8)100, 255);
+
+						Manager->TextureData[x + y * signedSize] = ShroudColor;
 					}
 				}
 			}
