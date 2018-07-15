@@ -105,8 +105,28 @@ void AFogOfWarManager::OnFowTextureUpdated(UTexture2D* currentTexture, UTexture2
 	FOWTextureBlend = 0;
 }
 
-void AFogOfWarManager::RegisterFowActor(AActor* Actor) {
-	FowActors.Add(Actor);
+void AFogOfWarManager::RegisterComponent(UFogOfWarComponent *Comp)
+{
+	// make sure to lock as this array is accessed both from the game thread and the FOWWorker thread
+	FowComponents_mutex.Lock();
+	FowComponents.AddUnique(Comp);
+	FowComponents_mutex.Unlock();
+}
+
+void AFogOfWarManager::DeRegisterComponent(UFogOfWarComponent *Comp)
+{
+	// make sure to lock as this array is accessed both from the game thread and the FOWWorker thread
+	FowComponents_mutex.Lock();
+	FowComponents.Remove(Comp);
+	FowComponents_mutex.Unlock();
+}
+
+void AFogOfWarManager::GetFowComponents(TArray<UFogOfWarComponent *> &OutFowComponents)
+{
+	// make sure to lock as this array is accessed both from the game thread and the FOWWorker thread
+	FowComponents_mutex.Lock();
+	OutFowComponents = FowComponents;
+	FowComponents_mutex.Unlock();
 }
 
 bool AFogOfWarManager::GetIsBlurEnabled() {

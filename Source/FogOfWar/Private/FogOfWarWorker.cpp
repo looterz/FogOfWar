@@ -2,6 +2,7 @@
 
 #include "FogOfWarWorker.h"
 #include "FogOfWarManager.h"
+#include "FogOfWarComponent.h"
 #include "Engine/World.h"
 
 AFogOfWarWorker::AFogOfWarWorker() {}
@@ -53,10 +54,11 @@ void AFogOfWarWorker::UpdateFowTexture() {
 	int sightTexels = Manager->SightRange * Manager->SamplesPerMeter;
 	float dividend = 100.0f / Manager->SamplesPerMeter;
 
-	for (auto Itr(Manager->FowActors.CreateIterator()); Itr; Itr++) {
-		//Find actor position
-		if (!*Itr) return;
-		FVector position = (*Itr)->GetActorLocation();
+	TArray<UFogOfWarComponent *> FOWComponents;
+	Manager->GetFowComponents(FOWComponents);
+	for (auto *Comp : FOWComponents)
+	{
+		FVector position = Comp->GetComponentLocation();
 
 		//We divide by 100.0 because 1 texel equals 1 meter of visibility-data.
 		int posX = (int)(position.X / dividend) + halfTextureSize;
@@ -67,7 +69,7 @@ void AFogOfWarWorker::UpdateFowTexture() {
 		FVector2D textureSpacePos = FVector2D(posX, posY);
 		int size = (int)Manager->TextureSize;
 
-		FCollisionQueryParams queryParams(FName(TEXT("FOW trace")), false, (*Itr));
+		FCollisionQueryParams queryParams(FName(TEXT("FOW trace")), false, Comp->GetOwner());
 		int halfKernelSize = (Manager->blurKernelSize - 1) / 2;
 
 		//Store the positions we want to blur

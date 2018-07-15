@@ -9,6 +9,7 @@
 */
 class UMaterialInstanceDynamic;
 class UPostProcessComponent;
+class UFogOfWarComponent;
 
 UCLASS()
 class FOGOFWAR_API AFogOfWarManager : public AActor
@@ -39,38 +40,38 @@ public:
 	//How far will an actor be able to see
 	//CONSIDER: Place it on the actors to allow for individual sight-radius
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FogOfWar)
-		float SightRange = 9.0f;
+	float SightRange = 9.0f;
 
 	//The number of samples per 100 unreal units
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FogOfWar)
-		float SamplesPerMeter = 2.0f;
+	float SamplesPerMeter = 2.0f;
 
 	//If the last texture blending is done
 	UPROPERTY(BlueprintReadWrite)
-		bool bIsDoneBlending;
+	bool bIsDoneBlending;
 
 	//Should we blur? It takes up quite a lot of CPU time...
 	UPROPERTY(EditAnywhere)
-		bool bIsBlurEnabled = true;
+	bool bIsBlurEnabled = true;
 
 	//The size of our textures
 	uint32 TextureSize = 1024;
 
 	//Array containing what parts of the map we've unveiled.
 	UPROPERTY()
-		TArray<bool> UnfoggedData;
+	TArray<bool> UnfoggedData;
 
 	//Temp array for horizontal blur pass
 	UPROPERTY()
-		TArray<uint8> HorizontalBlurData;
+	TArray<uint8> HorizontalBlurData;
 
 	//Our texture data (result of vertical blur pass)
 	UPROPERTY()
-		TArray<FColor> TextureData;
+	TArray<FColor> TextureData;
 
 	//Our texture data from the last frame
 	UPROPERTY()
-		TArray<FColor> LastFrameTextureData;
+	TArray<FColor> LastFrameTextureData;
 
 	//Check to see if we have a new FOW-texture.
 	bool bHasFOWTextureUpdate = false;
@@ -80,11 +81,22 @@ public:
 
 	//Blur kernel
 	UPROPERTY()
-		TArray<float> blurKernel;
+	TArray<float> blurKernel;
 
-	//Store the actors that will be unveiling the FOW-texture.
+protected:
 	UPROPERTY()
-		TArray<AActor*> FowActors;
+	TArray<UFogOfWarComponent *> FowComponents;
+	FCriticalSection FowComponents_mutex;
+public:
+	/* register a component for FOW-texture calculations */
+	UFUNCTION(BlueprintCallable, Category = "FOW")
+	void RegisterComponent(UFogOfWarComponent *Comp);
+	/* de register a component for FOW-texture calculations */
+	UFUNCTION(BlueprintCallable, Category = "FOW")
+	void DeRegisterComponent(UFogOfWarComponent *Comp);
+	/* Get an array with the currently registerd components */
+	UFUNCTION(BlueprintCallable, Category = "FOW")
+	void GetFowComponents(TArray<UFogOfWarComponent *> &OutFowComponents);
 
 	//DEBUG: Time it took to update the fow texture
 	float fowUpdateTime = 0;
