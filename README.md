@@ -14,6 +14,7 @@ The best (and AFAIK only) documentation is the [original thread](https://forums.
 **HEAD**
 * Support different fog colors
 * Add FogOfWarComponent that handles registration with the FogOfWarManager and keeps track of per-actor settings like sight range
+* Move code from `LevelInfo` Blueprint to the `AFogOfWarManager` 
 
 **Version 1.0 - 15.07.2018**
 * First version, mostly original code from the thread on the Unreal Engine Forums
