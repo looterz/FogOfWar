@@ -11,6 +11,10 @@ Right now the code is nearly identical to that of the thread, except for some mi
 The best (and AFAIK only) documentation is the [original thread](https://forums.unrealengine.com/community/community-content-tools-and-tutorials/26436-tutorial-fog-of-war?55650-Tutorial-Fog-Of-War=)
 
 ## Changes
+**HEAD**
+* Support different fog colors
+* Add FogOfWarComponent that handles registration with the FogOfWarManager and keeps track of per-actor settings like sight range
+
 **Version 1.0 - 15.07.2018**
 * First version, mostly original code from the thread on the Unreal Engine Forums
 * Runs on UE 4.19
