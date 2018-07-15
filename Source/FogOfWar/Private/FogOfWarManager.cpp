@@ -2,6 +2,12 @@
 
 #include "FogOfWarManager.h"
 
+#include "Components/PostProcessComponent.h"
+#include "ConstructorHelpers.h"
+#include "Materials/Material.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
+
 AFogOfWarManager::AFogOfWarManager(const FObjectInitializer &FOI) : Super(FOI) {
 	PrimaryActorTick.bCanEverTick = true;
 	textureRegions = new FUpdateTextureRegion2D(0, 0, 0, 0, TextureSize, TextureSize);
@@ -24,6 +30,10 @@ AFogOfWarManager::AFogOfWarManager(const FObjectInitializer &FOI) : Super(FOI) {
 	blurKernel[12] = 0.009246f;
 	blurKernel[13] = 0.002403f;
 	blurKernel[14] = 0.000489f;
+
+	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("Post-process Component");
+
+	FOWTextureBlend = 0;
 }
 
 AFogOfWarManager::~AFogOfWarManager() {
@@ -50,6 +60,29 @@ void AFogOfWarManager::Tick(float DeltaSeconds) {
 		//Trigger the blueprint update
 		OnFowTextureUpdated(FOWTexture, LastFOWTexture);
 	}
+
+	// Set blending factor between FOW-textures
+	if (FOWTextureBlend < 1)
+	{
+		FOWTextureBlend = FMath::Clamp(FOWTextureBlend * 10 + DeltaSeconds, 0.0f, 1.0f);
+		FOWMaterial->SetScalarParameterValue(FName("Blend"), FOWTextureBlend);
+	}
+	else if (!bIsDoneBlending)
+	{
+		bIsDoneBlending = true;
+	}
+
+}
+
+void AFogOfWarManager::OnConstruction(const FTransform & Transform)
+{
+	Super::OnConstruction(Transform);
+
+	// set up the FOW material
+	UMaterial *BaseMaterial = LoadObject<UMaterial>(this, TEXT("/FogOfWar/Materials/PP_Fow_Mat.PP_Fow_Mat"));
+	check(BaseMaterial);
+	FOWMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+	PostProcessComponent->AddOrUpdateBlendable(FOWMaterial, 1);
 }
 
 void AFogOfWarManager::StartFOWTextureUpdate() {
@@ -65,8 +98,11 @@ void AFogOfWarManager::StartFOWTextureUpdate() {
 	}
 }
 
-void AFogOfWarManager::OnFowTextureUpdated_Implementation(UTexture2D* currentTexture, UTexture2D* lastTexture) {
-	//Handle in blueprint
+void AFogOfWarManager::OnFowTextureUpdated(UTexture2D* currentTexture, UTexture2D* lastTexture) {
+	FOWMaterial->SetTextureParameterValue(FName("FOWTexture"), currentTexture);
+	FOWMaterial->SetTextureParameterValue(FName("LastFOWTexture"), lastTexture);
+	FOWMaterial->SetScalarParameterValue(FName("Blend"), 0.0f);
+	FOWTextureBlend = 0;
 }
 
 void AFogOfWarManager::RegisterFowActor(AActor* Actor) {

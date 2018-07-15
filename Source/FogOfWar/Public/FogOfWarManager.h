@@ -7,6 +7,8 @@
 /**
 *
 */
+class UMaterialInstanceDynamic;
+class UPostProcessComponent;
 
 UCLASS()
 class FOGOFWAR_API AFogOfWarManager : public AActor
@@ -16,11 +18,10 @@ class FOGOFWAR_API AFogOfWarManager : public AActor
 	virtual ~AFogOfWarManager();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void OnConstruction(const FTransform & Transform) override;
+protected:
+	void OnFowTextureUpdated(UTexture2D* currentTexture, UTexture2D* lastTexture);
 public:
-	//Triggers a update in the blueprint
-	UFUNCTION(BlueprintNativeEvent)
-		void OnFowTextureUpdated(UTexture2D* currentTexture, UTexture2D* lastTexture);
-
 	//Register an actor to influence the FOW-texture
 	void RegisterFowActor(AActor* Actor);
 
@@ -91,8 +92,17 @@ public:
 	//Getter for the working thread
 	bool GetIsBlurEnabled();
 
-private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UPostProcessComponent *PostProcessComponent;
+
+	UPROPERTY(BlueprintReadWrite, Category = "FOW")
+	UMaterialInstanceDynamic *FOWMaterial;
+
+protected:
 	void UpdateFowTexture();
+
+	UPROPERTY(BlueprintReadWrite, Category = "FOW")
+	float FOWTextureBlend;
 
 	//Triggers the start of a new FOW-texture-update
 	void StartFOWTextureUpdate();
