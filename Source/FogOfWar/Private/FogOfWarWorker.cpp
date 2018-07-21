@@ -54,7 +54,6 @@ void AFogOfWarWorker::UpdateFowTexture() {
 	int signedSize = (int)Manager->TextureSize; //For convenience....
 	TSet<FVector2D> currentlyInSight;
 	TSet<FVector2D> texelsToBlur;
-	int sightTexels = Manager->SightRange * Manager->SamplesPerMeter;
 	float dividend = 100.0f / Manager->SamplesPerMeter;
 
 	TArray<UFogOfWarComponent *> FOWComponents;
@@ -62,6 +61,7 @@ void AFogOfWarWorker::UpdateFowTexture() {
 	for (auto *Comp : FOWComponents)
 	{
 		FVector position = Comp->GetComponentLocation();
+		int sightTexels = Comp->SightRange * Manager->SamplesPerMeter / 100;
 
 		//We divide by 100.0 because 1 texel equals 1 meter of visibility-data.
 		int posX = (int)(position.X / dividend) + halfTextureSize;

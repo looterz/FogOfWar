@@ -37,11 +37,6 @@ public:
 		uint8* SrcData,
 		bool bFreeData);
 
-	//How far will an actor be able to see
-	//CONSIDER: Place it on the actors to allow for individual sight-radius
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SightRange = 9.0f;
-
 	//The number of samples per 100 unreal units
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SamplesPerMeter = 2.0f;

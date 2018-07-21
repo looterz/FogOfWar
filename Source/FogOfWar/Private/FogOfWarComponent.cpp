@@ -12,6 +12,7 @@ UFogOfWarComponent::UFogOfWarComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	bRegisterAtBeginPlay = true;
+	SightRange = 900;
 }
 
 

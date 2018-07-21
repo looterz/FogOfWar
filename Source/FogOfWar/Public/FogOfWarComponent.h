@@ -22,14 +22,18 @@ public:
 	UFogOfWarComponent();
 
 	/* Should this component register itself with the FOWManager at game start */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FOW")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bRegisterAtBeginPlay;
 
+	/* Distance, in UUs, this component can see */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SightRange;
+
 	/* Tell the manager to include this component in the FOW updates */
-	UFUNCTION(BlueprintCallable, Category = "FOW")
+	UFUNCTION(BlueprintCallable)
 	void RegisterFOW() { Manager->RegisterComponent(this); }
 	/* Tell the manager ignore this component in the FOW updates */
-	UFUNCTION(BlueprintCallable, Category = "FOW")
+	UFUNCTION(BlueprintCallable)
 	void DeRegisterFOW() { Manager->DeRegisterComponent(this); }
 
 protected:
