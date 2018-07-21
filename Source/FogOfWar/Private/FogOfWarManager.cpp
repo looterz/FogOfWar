@@ -47,6 +47,11 @@ AFogOfWarManager::~AFogOfWarManager() {
 void AFogOfWarManager::BeginPlay() {
 	Super::BeginPlay();
 	bIsDoneBlending = true;
+
+	FOWMaterial->SetVectorParameterValue("FOWCenter", GetActorLocation());
+	FOWMaterial->SetScalarParameterValue("TextureSize", TextureSize);
+	FOWMaterial->SetScalarParameterValue("Size", TextureSize / SamplesPerMeter);
+
 	AFogOfWarManager::StartFOWTextureUpdate();
 }
 
