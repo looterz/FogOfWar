@@ -15,7 +15,7 @@ UCLASS()
 class FOGOFWAR_API AFogOfWarManager : public AActor
 {
 	GENERATED_BODY()
-		AFogOfWarManager(const FObjectInitializer & FOI);
+	AFogOfWarManager(const FObjectInitializer & FOI);
 	virtual ~AFogOfWarManager();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -37,9 +37,9 @@ public:
 		uint8* SrcData,
 		bool bFreeData);
 
-	//The number of samples per 100 unreal units
+	//The number of samples per unreal units
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SamplesPerMeter = 2.0f;
+	float SamplesPerUU = 2 / 100.0f;
 
 	//If the last texture blending is done
 	UPROPERTY(BlueprintReadWrite)
@@ -51,6 +51,24 @@ public:
 
 	//The size of our textures
 	uint32 TextureSize = 1024;
+
+protected:
+	// The size of the individual texels in UUs
+	float TexelSize;
+public:
+	inline float GetTexelSize() { return TexelSize; }
+	inline FVector ToTextureSpace(const FVector &WorldSpace)
+	{
+		FVector TextureSpace = (WorldSpace / TexelSize) + (TextureSize / 2);
+		TextureSpace.Z = WorldSpace.Z; // dont't touch the height component
+		return TextureSpace;
+	}
+	inline FVector ToWorldSpace(const FVector &TextureSpace)
+	{
+		FVector WorldSpace = (TextureSpace - TextureSize / 2)  * TexelSize;
+		WorldSpace.Z = TextureSpace.Z; // dont't touch the height component
+		return WorldSpace;
+	}
 
 	//Array containing what parts of the map we've unveiled.
 	UPROPERTY()

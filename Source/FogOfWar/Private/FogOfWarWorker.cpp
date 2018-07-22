@@ -54,48 +54,42 @@ void AFogOfWarWorker::UpdateFowTexture() {
 	int signedSize = (int)Manager->TextureSize; //For convenience....
 	TSet<FVector2D> currentlyInSight;
 	TSet<FVector2D> texelsToBlur;
-	float dividend = 100.0f / Manager->SamplesPerMeter;
 
 	TArray<UFogOfWarComponent *> FOWComponents;
 	Manager->GetFowComponents(FOWComponents);
 	for (auto *Comp : FOWComponents)
 	{
 		FVector position = Comp->GetComponentLocation();
-		int sightTexels = Comp->SightRange * Manager->SamplesPerMeter / 100;
+		int sightTexels = Comp->SightRange * Manager->SamplesPerUU;
 
-		//We divide by 100.0 because 1 texel equals 1 meter of visibility-data.
-		int posX = (int)(position.X / dividend) + halfTextureSize;
-		int posY = (int)(position.Y / dividend) + halfTextureSize;
-		double integerX, integerY;
+		// Find the components location in texture space
+		FVector TextureSpacePosition = Manager->ToTextureSpace(position);
+		uint32 posX = TextureSpacePosition.X;
+		uint32 posY = TextureSpacePosition.Y;
 
-		FVector2D fractions = FVector2D(modf(position.X / 50.0f, &integerX), modf(position.Y / 50.0f, &integerY));
-		FVector2D textureSpacePos = FVector2D(posX, posY);
-		int size = (int)Manager->TextureSize;
+		uint32 &TextureSize = Manager->TextureSize;
 
 		FCollisionQueryParams queryParams(FName(TEXT("FOW trace")), false, Comp->GetOwner());
 		int halfKernelSize = (Manager->blurKernelSize - 1) / 2;
 
 		//Store the positions we want to blur
-		for (int y = posY - sightTexels - halfKernelSize; y <= posY + sightTexels + halfKernelSize; y++) {
-			for (int x = posX - sightTexels - halfKernelSize; x <= posX + sightTexels + halfKernelSize; x++) {
-				if (x > 0 && x < size && y > 0 && y < size) {
+		for (uint32 y = posY - sightTexels - halfKernelSize; y <= posY + sightTexels + halfKernelSize; y++) {
+			for (uint32 x = posX - sightTexels - halfKernelSize; x <= posX + sightTexels + halfKernelSize; x++) {
+				if (x < TextureSize && y < TextureSize) {
 					texelsToBlur.Add(FIntPoint(x, y));
 				}
 			}
 		}
 
 		//Unveil the positions our actors are currently looking at
-		for (int y = posY - sightTexels; y <= posY + sightTexels; y++) {
-			for (int x = posX - sightTexels; x <= posX + sightTexels; x++) {
+		for (uint32 y = posY - sightTexels; y <= posY + sightTexels; y++) {
+			for (uint32 x = posX - sightTexels; x <= posX + sightTexels; x++) {
 				//Kernel for radial sight
-				if (x > 0 && x < size && y > 0 && y < size) {
-					FVector2D currentTextureSpacePos = FVector2D(x, y);
-					int length = (int)(textureSpacePos - currentTextureSpacePos).Size();
+				if (x < TextureSize && y < TextureSize) {
+					FVector currentTextureSpacePos(x, y, position.Z);
+					int length = (int)(TextureSpacePosition - currentTextureSpacePos).Size();
 					if (length <= sightTexels) {
-						FVector currentWorldSpacePos = FVector(
-							((x - (int)halfTextureSize)) * dividend,
-							((y - (int)halfTextureSize)) * dividend,
-							position.Z);
+						FVector currentWorldSpacePos = Manager->ToWorldSpace(FVector(x, y, position.Z));
 
 						//CONSIDER: This is NOT the most efficient way to do conditional unfogging. With long view distances and/or a lot of actors affecting the FOW-data
 						//it would be preferrable to not trace against all the boundary points and internal texels/positions of the circle, but create and cache "rasterizations" of
@@ -106,7 +100,8 @@ void AFogOfWarWorker::UpdateFowTexture() {
 						//However, the tracing doesn't seem like it takes much time at all (~0.02ms with four actors tracing circles of 18 texels each),
 						//it's the blurring that chews CPU..
 						FHitResult HitResult;
-						if (!Manager->GetWorld()->LineTraceSingleByChannel(HitResult, position, currentWorldSpacePos, ECollisionChannel::ECC_WorldStatic, queryParams)) {
+						if (!Manager->GetWorld()->LineTraceSingleByChannel(HitResult, position, currentWorldSpacePos, ECollisionChannel::ECC_WorldStatic, queryParams))
+						{
 							//Unveil the positions we are currently seeing
 							Manager->UnfoggedData[x + y * Manager->TextureSize] = true;
 							//Store the positions we are currently seeing.
