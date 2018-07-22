@@ -32,6 +32,7 @@ AFogOfWarManager::AFogOfWarManager(const FObjectInitializer &FOI) : Super(FOI) {
 	blurKernel[14] = 0.000489f;
 
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("Post-process Component");
+	SetRootComponent(PostProcessComponent);
 
 	FOWTextureBlend = 0;
 	FogColor = FColor::Black;
